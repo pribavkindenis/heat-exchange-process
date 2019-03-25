@@ -1,53 +1,73 @@
-from matplotlib import pyplot as plt
-from typing import *
-import numpy as np
+import sys
+from PyQt5.QtWidgets import QApplication, QDesktopWidget, QWidget, QVBoxLayout, QSlider, QLabel
+from PyQt5.QtCore import Qt
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from heat_process import HeatProcess
 
 
-def calculate_u(x_batches: int = 55,
-                t_batches: int = 3000,
-                rod_length: int = 10,
-                experiment_time: int = 50,
-                k_cf: float = 0.65,
-                c_cf: float = 1.84,
-                s: float = 0.01,
-                alpha_cf: float = 0.005,
-                u0: int = 20,
-                phy: Callable = lambda x: 0,
-                xi: Callable = lambda x, l, f: -4*x**2/l**2 + 4*x/l + f) -> np.ndarray:
-    res = [[]]
+class MainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.process = HeatProcess()
 
-    hx = rod_length / x_batches
-    ht = experiment_time / t_batches
+        self.figure = Figure()
+        self.ax = self.figure.add_subplot(111)
 
-    x_range = np.arange(0, hx * x_batches + hx, hx)
-    t_range = np.arange(0, ht * t_batches + ht, ht)
+        self.canvas = FigureCanvas(self.figure)
 
-    for x in x_range:
-        res[0].append(xi(x, rod_length, u0))
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(0, self.process.t_batches)
+        self.slider.valueChanged.connect(self.slider_change_handler)
 
-    a = ht * k_cf / c_cf
-    b = 4 * alpha_cf / k_cf / np.sqrt(s)
+        self.time_label = QLabel()
+        self.time_label.setAlignment(Qt.AlignCenter)
 
-    for k in range(1, t_batches + 1):
-        res.append([])
-        res[k].append(a*(2*(res[k-1][1] - res[k-1][0])/hx**2 + b*(u0 - res[k-1][0])) + ht*phy(x_range[0]) + res[k-1][0])
+        self.create_ui()
+        self.slider_change_handler(0)
 
-        for i in range(1, x_batches):
-            res[k].append(a*((res[k-1][i+1] - 2*res[k-1][i] + res[k-1][i-1])/hx**2 + b*(u0 - res[k-1][i]))
-                          + ht*phy(x_range[i]) + res[k-1][i])
+    def create_ui(self):
+        v_box = QVBoxLayout()
+        v_box.addWidget(self.canvas)
+        v_box.addWidget(self.slider)
+        v_box.addWidget(self.time_label)
 
-        res[k].append(a*(2*(res[k-1][1] - res[k-1][x_batches])/hx**2 + b*(u0 - res[k-1][x_batches])) +
-                      ht*phy(x_range[x_batches]) + res[k-1][x_batches])
+        self.setLayout(v_box)
+        self.setWindowTitle("Heat exchange process")
+        self.setFixedHeight(self.sizeHint().height())
+        self.setFixedWidth(800)
+        self.center()
 
-    res = np.array(res)
+    def slider_change_handler(self, value):
+        self.time_label.setText("t = {:.2f} s".format(self.process.ht * value))
+        data = (self.process.x_range, self.process.u[value, :])
+        self.plot(data, self.process.u0, self.get_color(value))
 
-    plt.plot(x_range, res[0][:])
-    plt.ylim(u0-0.5, u0+1.5)
-    plt.grid()
-    plt.show()
+    def center(self):
+        qt_rectangle = self.frameGeometry()
+        center_point = QDesktopWidget().availableGeometry().center()
+        qt_rectangle.moveCenter(center_point)
+        self.move(qt_rectangle.topLeft())
 
-    return res
+    def plot(self, data, u0, color):
+        self.ax.clear()
+        self.ax.plot(*data, color=color)
+        self.ax.set_title("Temperature distribution")
+        self.ax.set_ylabel("t, °C")
+        self.ax.set_xlabel("x, cm")
+        self.ax.grid()
+        self.ax.set_ylim(u0 - 0.5, u0 + 1.5)
+        self.canvas.draw()
+
+    def get_color(self, value):
+        t = 1 / self.process.t_batches
+        return 1 - t*value, 0, t*value
 
 
 if __name__ == "__main__":
-    u = calculate_u()
+    app = QApplication(sys.argv)
+    main_window = MainWindow()
+    main_window.show()
+    exit(app.exec_())
