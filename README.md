@@ -3,7 +3,7 @@ A simple Python application that performs heat exchange process.
 # Installation
 **Debian based**
 ```bash
-sudo apt-get install git python3.6 python3-pip python3.6-tk
+sudo apt-get install git python3.6 python3-pip python3.6-tk python3-pyqt5 pyqt5-dev-tools
 pip3 install virtualenv
 git clone https://github.com/pribavkindenis/heat-exchange-process.git
 cd ./heat-exchange-process/
@@ -12,7 +12,7 @@ cd ./heat-exchange-process/
 ```
 **Arch linux**
 ```bash
-sudo packman install git python3.6 python3-pip python3.6-tk
+sudo packman install git python3.6 python3-pip python3.6-tk python3-pyqt5 pyqt5-dev-tools
 pip3 install virtualenv
 git clone https://github.com/pribavkindenis/heat-exchange-process.git
 cd ./heat-exchange-process/
@@ -21,7 +21,7 @@ cd ./heat-exchange-process/
 ```
 **OS X**
 ```bash
-brew install git python3.6 python3-pip python3.6-tk
+brew install git python3.6 python3-pip python3.6-tk python3-pyqt5 pyqt5-dev-tools
 pip3 install virtualenv
 git clone https://github.com/pribavkindenis/heat-exchange-process.git
 cd ./heat-exchange-process/
