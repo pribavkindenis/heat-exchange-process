@@ -7,10 +7,10 @@ from PyQt5.QtGui import *
 from typing import *
 from enum import Enum
 
-from numerically_calculated_process import NumericallyCalculatedProcess
-from explicitly_calculated_process import ExplicitlyCalculatedProcess
-from inexplicitly_calculated_process import InexplicitlyCalculatedProcess
-from analytically_calculated_process import AnalyticallyCalculatedProcess
+from app.process.numerically_calculated_process import NumericallyCalculatedProcess
+from app.process.explicitly_calculated_process import ExplicitlyCalculatedProcess
+from app.process.inexplicitly_calculated_process import InexplicitlyCalculatedProcess
+from app.process.analytically_calculated_process import AnalyticallyCalculatedProcess
 
 
 class MainWindow(QWidget):

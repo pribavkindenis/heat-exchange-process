@@ -1,4 +1,4 @@
-from numerically_calculated_process import NumericallyCalculatedProcess
+from app.process.numerically_calculated_process import NumericallyCalculatedProcess
 import numpy as np
 from typing import *
 

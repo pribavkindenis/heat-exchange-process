@@ -1,4 +1,4 @@
-from process import Process
+from app.process.process import Process
 from typing import *
 import numpy as np
 
