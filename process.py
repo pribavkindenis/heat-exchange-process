@@ -33,11 +33,11 @@ class Process(ABC):
         pass
 
     @abstractmethod
-    def get_x(self) -> np.ndarray:
+    def get_xn(self) -> np.ndarray:
         pass
 
     @abstractmethod
-    def get_t(self) -> np.ndarray:
+    def get_tn(self) -> np.ndarray:
         pass
 
     @abstractmethod

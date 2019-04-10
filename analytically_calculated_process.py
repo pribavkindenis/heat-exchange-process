@@ -19,13 +19,13 @@ class AnalyticallyCalculatedProcess(Process):
                  eps: int):
         super().__init__(l, t, s, a, k, c, u0, phi, xi, x_num, t_num)
         self._eps = eps
-        self._x, self._hx = np.linspace(0, self._l, self._x_num, retstep=True)
-        self._t, self._ht = np.linspace(0, self._t, self._t_num, retstep=True)
+        self._xn, self._hx = np.linspace(0, self._l, self._x_num, retstep=True)
+        self._tn, self._ht = np.linspace(0, self._t, self._t_num, retstep=True)
         self._u = self._calculate_process()
 
     def _calculate_process(self) -> np.ndarray:
         mu = -4 * self._a / (self._c * np.sqrt(self._s))
-        x, t = np.meshgrid(self._x, self._t)
+        x, t = np.meshgrid(self._xn, self._tn)
         u = self._calculate_u(x, t, mu)
         return np.array(u)
 
@@ -44,11 +44,11 @@ class AnalyticallyCalculatedProcess(Process):
     def get_solution(self, index) -> np.ndarray:
         return self._u[index]
 
-    def get_x(self) -> np.ndarray:
-        return self._x
+    def get_xn(self) -> np.ndarray:
+        return self._xn
 
-    def get_t(self) -> np.ndarray:
-        return self._t
+    def get_tn(self) -> np.ndarray:
+        return self._tn
 
     def get_ht(self) -> float:
         return self._ht

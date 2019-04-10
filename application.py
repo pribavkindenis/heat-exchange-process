@@ -7,7 +7,7 @@ from PyQt5.QtGui import *
 from typing import *
 from enum import Enum
 
-from process import Process
+from numerically_calculated_process import NumericallyCalculatedProcess
 from explicitly_calculated_process import ExplicitlyCalculatedProcess
 from inexplicitly_calculated_process import InexplicitlyCalculatedProcess
 from analytically_calculated_process import AnalyticallyCalculatedProcess
@@ -36,12 +36,14 @@ class MainWindow(QWidget):
 
     restore_defaults_btn: QPushButton
 
-    analytical: AnalyticallyCalculatedProcess
-    numerical: Process
+    analytical: Optional[AnalyticallyCalculatedProcess]
+    numerical: Optional[NumericallyCalculatedProcess]
 
     successfully_parsed: bool
     params: List[float or int]
     editors: List[QLineEdit]
+
+    thread: QThread
 
     def __init__(self):
         super().__init__()
@@ -54,32 +56,64 @@ class MainWindow(QWidget):
 
     def params_change_handler(self):
         self.parse_parameters()
+        self.analytical = None
+        self.numerical = None
+        self.remove_tooltips()
         if self.successfully_parsed:
-            self.numerical = self.create_numerical()
-            if self.show_analytical.isChecked():
-                self.analytical = self.create_analytical()
+            def calculate():
+                self.numerical = self.create_numerical()
+                self.add_tooltips()
+                if self.show_analytical.isChecked():
+                    self.analytical = self.create_analytical()
+                return self
             self.update_slider_range()
-            self.slider.setValue(0)
-            self.slider_change_handler(0)
+            self.start_calculation_thread(calculate)
 
     def scheme_type_change_handler(self):
-        self.numerical = self.create_numerical()
-        self.slider.setValue(0)
-        self.slider_change_handler(0)
+        def calculate():
+            self.numerical = self.create_numerical()
+            self.add_tooltips()
+            return self
+        self.numerical = None
+        self.remove_tooltips()
+        self.start_calculation_thread(calculate)
 
     def show_analytical_change_handler(self, state):
-        if state == Qt.Checked:
-            self.analytical = self.create_analytical()
-            self.eps_edit.setEnabled(True)
+        if state == Qt.Checked and self.analytical is None:
+            def calculate():
+                self.analytical = self.create_analytical()
+                return self
+            self.start_calculation_thread(calculate)
         else:
-            self.eps_edit.setEnabled(False)
+            self.finish_change_handling()
+
+    def start_calculation_thread(self, calculate: Callable):
+        self.thread = self.CalculationThread(calculate)
+        self.thread.calculated.connect(self.finish_change_handling)
+        self.draw_loading()
+        self.set_ui_enabled(False)
+        self.thread.start()
+
+    def finish_change_handling(self):
+        self.set_ui_enabled(True)
         self.slider.setValue(0)
         self.slider_change_handler(0)
+        self.eps_edit.setEnabled(self.show_analytical.isChecked())
 
     def slider_change_handler(self, index):
-        t = self.numerical.get_t()
+        t = self.numerical.get_tn()
         self.time_label.setText("Текущее время: {:.2f} c".format(t[index]))
         self.draw_plot(index)
+
+    def add_tooltips(self):
+        self.x_num_edit.setToolTip("При текущих параметрах желательно как максимум {}"
+                                   .format(self.numerical.get_max_x_num()))
+        self.t_num_edit.setToolTip("При текущих параметрах желательно как минимум {}"
+                                   .format(self.numerical.get_min_t_num()))
+
+    def remove_tooltips(self):
+        self.x_num_edit.setToolTip("")
+        self.t_num_edit.setToolTip("")
 
     def update_slider_range(self):
         self.slider.setRange(0, self.get_t_num() - 1)
@@ -90,7 +124,7 @@ class MainWindow(QWidget):
         xi: Callable = lambda x: -4 * x ** 2 / l ** 2 + 4 * x / l + u0
         return AnalyticallyCalculatedProcess(l, t, s, a, k, c, u0, phi, xi, x_num, t_num, eps)
 
-    def create_numerical(self) -> Process:
+    def create_numerical(self) -> NumericallyCalculatedProcess:
         scheme_type = self.get_current_scheme_type()
         if scheme_type == self.SchemeType.EXPLICIT:
             return self.create_explicit()
@@ -113,17 +147,23 @@ class MainWindow(QWidget):
         xi: Callable = lambda x: -4 * x ** 2 / l ** 2 + 4 * x / l + u0
         return InexplicitlyCalculatedProcess(l, t, s, a, k, c, u0, phi, xi, x_num, t_num)
 
+    def draw_loading(self):
+        self.ax.clear()
+        self.ax.axis("off")
+        self.ax.text(0.5, 0.5, "Выполняется вычисление...", va="center", ha="center", fontsize=15)
+        self.canvas.draw()
+
     def draw_plot(self, index):
         self.ax.clear()
         self.ax.axis("on")
-        x = self.numerical.get_x()
+        x = self.numerical.get_xn()
         y = self.numerical.get_solution(index)
-        self.ax.plot(x, y, color="purple")
+        self.ax.plot(x, y, color="purple", linewidth=2.0)
 
         if self.show_analytical.isChecked():
-            x = self.analytical.get_x()
+            x = self.analytical.get_xn()
             y = self.analytical.get_solution(index)
-            self.ax.plot(x, y, color="orange", linestyle="--")
+            self.ax.plot(x, y, color="orange", linestyle="--", linewidth=2.0)
 
         u0 = self.get_u0()
         self.ax.set_ylim(u0 - 0.5, u0 + 1.5)
@@ -164,6 +204,12 @@ class MainWindow(QWidget):
         self.show_analytical.setEnabled(trigger)
         self.slider.setEnabled(trigger)
         self.scheme_type_box.setEnabled(trigger)
+
+    def set_ui_enabled(self, trigger):
+        self.set_widgets_enabled(trigger)
+        self.restore_defaults_btn.setEnabled(trigger)
+        for i in range(len(self.editors)):
+            self.editors[i].setEnabled(trigger)
 
     def get_u0(self) -> float:
         return self.params[6]
@@ -223,8 +269,6 @@ class MainWindow(QWidget):
         grid = QGridLayout()
         grid.setSpacing(10)
 
-        self.eps_edit.setEnabled(False)
-
         explicit_item = QStandardItem("Явная разностная схема")
         explicit_item.setData(self.SchemeType.EXPLICIT)
         self.scheme_type_box.model().appendRow(explicit_item)
@@ -233,7 +277,7 @@ class MainWindow(QWidget):
         inexplicit_item.setData(self.SchemeType.INEXPLICIT)
         self.scheme_type_box.model().appendRow(inexplicit_item)
 
-        self.show_analytical.setText("Показать аналитическое решение")
+        self.show_analytical.setText("Наложить аналитическое решение")
 
         self.time_label.setAlignment(Qt.AlignCenter)
 
@@ -316,6 +360,16 @@ class MainWindow(QWidget):
         center_point = QDesktopWidget().availableGeometry().center()
         qt_rectangle.moveCenter(center_point)
         self.move(qt_rectangle.topLeft())
+
+    class CalculationThread(QThread):
+        calculated = pyqtSignal(object)
+
+        def __init__(self, calculate: Callable):
+            super().__init__()
+            self.calculate = calculate
+
+        def run(self) -> None:
+            self.calculated.emit(self.calculate())
 
     class DoubleValidator(QDoubleValidator):
         def validate(self, p_str, p_int):
