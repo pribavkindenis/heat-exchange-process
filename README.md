@@ -4,7 +4,7 @@ A simple Python application that performs a heat exchange process.
 ![OOPS](./screenshots/process.png)
 
 # Requirements
-* python3
+* python3.6
 * virtualenv
 * tkinter
 
