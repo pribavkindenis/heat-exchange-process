@@ -27,19 +27,26 @@ class Process(ABC):
         self._xi = xi
         self._x_num = x_num
         self._t_num = t_num
+        self._xn, self._hx = np.linspace(0, self._l, self._x_num, retstep=True)
+        self._tn, self._ht = np.linspace(0, self._t, self._t_num, retstep=True)
+        self._u = self._calculate_process()
+
+    @abstractmethod
+    def _calculate_process(self):
+        pass
 
     @abstractmethod
     def get_solution(self, index) -> np.ndarray:
         pass
 
-    @abstractmethod
     def get_xn(self) -> np.ndarray:
-        pass
+        return self._xn
 
-    @abstractmethod
     def get_tn(self) -> np.ndarray:
-        pass
+        return self._tn
 
-    @abstractmethod
+    def get_hx(self) -> float:
+        return self._hx
+
     def get_ht(self) -> float:
-        pass
+        return self._ht

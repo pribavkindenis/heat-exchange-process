@@ -17,9 +17,6 @@ class ExplicitlyCalculatedProcess(NumericallyCalculatedProcess):
                  x_num: int,
                  t_num: int):
         super().__init__(l, t, s, a, k, c, u0, phi, xi, x_num, t_num)
-        self._xn, self._hx = np.linspace(0, self._l, self._x_num, retstep=True)
-        self._tn, self._ht = np.linspace(0, self._t, self._t_num, retstep=True)
-        self._u = self._calculate_process()
 
     def _calculate_process(self) -> np.ndarray:
         u = [[]]
@@ -54,15 +51,6 @@ class ExplicitlyCalculatedProcess(NumericallyCalculatedProcess):
 
     def get_solution(self, index) -> np.ndarray:
         return self._u[index]
-
-    def get_xn(self) -> np.ndarray:
-        return self._xn
-
-    def get_tn(self) -> np.ndarray:
-        return self._tn
-
-    def get_ht(self) -> float:
-        return self._ht
 
     def get_max_x_num(self) -> int:
         res = self._l * np.sqrt(self._c*(self._c*np.sqrt(self._s)*self._t_num - 4*self._t*self._a)
