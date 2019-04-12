@@ -373,9 +373,7 @@ class MainWindow(QWidget):
 
     class DoubleValidator(QDoubleValidator):
         def validate(self, p_str, p_int):
-            if "," in p_str:
-                p_str = p_str.replace(",", ".")
-            return super().validate(p_str, p_int)
+            return super().validate(p_str.replace(",", "."), p_int)
 
     class SchemeType(Enum):
         EXPLICIT = 1
