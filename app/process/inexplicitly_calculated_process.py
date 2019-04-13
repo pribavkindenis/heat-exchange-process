@@ -15,14 +15,15 @@ class InexplicitlyCalculatedProcess(NumericallyCalculatedProcess):
                  phi: Callable,
                  xi: Callable,
                  x_num: int,
-                 t_num: int):
-        super().__init__(l, t, s, a, k, c, u0, phi, xi, x_num, t_num)
+                 t_num: int,
+                 calculate_immediately: bool = True):
+        super().__init__(l, t, s, a, k, c, u0, phi, xi, x_num, t_num, calculate_immediately)
 
     def _calculate_process(self) -> np.ndarray:
         # TODO implement calculation of an inexplicit scheme here. Result must be a two dimensional array
         return self._xn
 
-    def get_solution(self, index) -> np.ndarray:
+    def get_solution_on(self, index) -> np.ndarray:
         # TODO change this method to return self._u[index]
         return self._xn
 
@@ -31,6 +32,14 @@ class InexplicitlyCalculatedProcess(NumericallyCalculatedProcess):
         return 0
 
     def get_min_t_num(self) -> int:
+        # TODO
+        return 0
+
+    def get_x_convergence_rate(self) -> int:
+        # TODO
+        return 0
+
+    def get_t_convergence_rate(self) -> int:
         # TODO
         return 0
 

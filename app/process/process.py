@@ -15,7 +15,8 @@ class Process(ABC):
                  phi: Callable,
                  xi: Callable,
                  x_num: int,
-                 t_num: int):
+                 t_num: int,
+                 calculate_immediately: bool = True):
         self._l = l
         self._t = t
         self._s = s
@@ -27,8 +28,12 @@ class Process(ABC):
         self._xi = xi
         self._x_num = x_num
         self._t_num = t_num
-        self._xn, self._hx = np.linspace(0, self._l, self._x_num, retstep=True)
-        self._tn, self._ht = np.linspace(0, self._t, self._t_num, retstep=True)
+        self._xn, self._hx = np.linspace(0, self._l, self._x_num + 1, retstep=True)
+        self._tn, self._ht = np.linspace(0, self._t, self._t_num + 1, retstep=True)
+        if calculate_immediately:
+            self._u = self._calculate_process()
+
+    def calculate(self):
         self._u = self._calculate_process()
 
     @abstractmethod
@@ -36,8 +41,11 @@ class Process(ABC):
         pass
 
     @abstractmethod
-    def get_solution(self, index) -> np.ndarray:
+    def get_solution_on(self, index) -> np.ndarray:
         pass
+
+    def get_solution(self):
+        return self._u
 
     def get_xn(self) -> np.ndarray:
         return self._xn
@@ -50,3 +58,9 @@ class Process(ABC):
 
     def get_ht(self) -> float:
         return self._ht
+
+    def get_x_num(self) -> int:
+        return self._x_num
+
+    def get_t_num(self) -> int:
+        return self._t_num

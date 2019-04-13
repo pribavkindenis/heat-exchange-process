@@ -16,9 +16,10 @@ class AnalyticallyCalculatedProcess(Process):
                  xi: Callable,
                  x_num: int,
                  t_num: int,
-                 eps: int):
+                 eps: int,
+                 calculate_immediately: bool = True):
         self._eps = eps
-        super().__init__(l, t, s, a, k, c, u0, phi, xi, x_num, t_num)
+        super().__init__(l, t, s, a, k, c, u0, phi, xi, x_num, t_num, calculate_immediately)
 
     def _calculate_process(self) -> np.ndarray:
         mu = -4 * self._a / (self._c * np.sqrt(self._s))
@@ -38,5 +39,5 @@ class AnalyticallyCalculatedProcess(Process):
     def _calculate_n(self) -> int:
         return int(np.ceil(16 / (self._eps*np.pi**2) - 1))
 
-    def get_solution(self, index) -> np.ndarray:
+    def get_solution_on(self, index) -> np.ndarray:
         return self._u[index]

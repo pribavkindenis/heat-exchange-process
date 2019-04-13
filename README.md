@@ -2,6 +2,7 @@
 A simple Python application that performs a heat exchange process.
 
 ![OOPS](./screenshots/process.png)
+![OOPS](./screenshots/experiment.png)
 
 # Requirements
 * python3.6
