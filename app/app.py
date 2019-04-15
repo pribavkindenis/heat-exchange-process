@@ -130,7 +130,7 @@ class MainWindow(QWidget):
         self.t_num_edit.setToolTip("")
 
     def update_slider_range(self):
-        self.slider.setRange(0, self.get_t_num() - 1)
+        self.slider.setRange(0, self.get_t_num())
 
     def get_current_scheme_type(self):
         index = self.scheme_type_box.currentIndex()
