@@ -274,7 +274,7 @@ class MainWindow(QWidget):
         explicit_item.setData(SchemeType.EXPLICIT)
         self.scheme_type_box.model().appendRow(explicit_item)
 
-        inexplicit_item = QStandardItem("Невная разностная схема")
+        inexplicit_item = QStandardItem("Неявная разностная схема")
         inexplicit_item.setData(SchemeType.INEXPLICIT)
         self.scheme_type_box.model().appendRow(inexplicit_item)
 
