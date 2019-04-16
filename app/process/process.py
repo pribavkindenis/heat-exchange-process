@@ -26,8 +26,8 @@ class Process(ABC):
         self._u0 = u0
         self._phi = phi
         self._xi = xi
-        self._x_num = x_num
-        self._t_num = t_num
+        self._x_num = int(x_num)
+        self._t_num = int(t_num)
         self._xn, self._hx = np.linspace(0, self._l, self._x_num + 1, retstep=True)
         self._tn, self._ht = np.linspace(0, self._t, self._t_num + 1, retstep=True)
         if calculate_immediately:
